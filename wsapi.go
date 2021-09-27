@@ -357,32 +357,32 @@ func newUpdateStatusData(idle int, activityType ActivityType, name, url string) 
 // If idle>0 then set status to idle.
 // If name!="" then set game.
 // if otherwise, set status to active, and no activity.
-func (s *Session) UpdateGameStatus(idle int, name string) (err error) {
-	return s.UpdateStatusComplex(*newUpdateStatusData(idle, ActivityTypeGame, name, ""))
-}
+// func (s *Session) UpdateGameStatus(idle int, name string) (err error) {
+// 	return s.UpdateStatusComplex(*newUpdateStatusData(idle, ActivityTypeGame, name, ""))
+// }
 
-// UpdateStreamingStatus is used to update the user's streaming status.
-// If idle>0 then set status to idle.
-// If name!="" then set game.
-// If name!="" and url!="" then set the status type to streaming with the URL set.
-// if otherwise, set status to active, and no game.
-func (s *Session) UpdateStreamingStatus(idle int, name string, url string) (err error) {
-	gameType := ActivityTypeGame
-	if url != "" {
-		gameType = ActivityTypeStreaming
-	}
-	return s.UpdateStatusComplex(*newUpdateStatusData(idle, gameType, name, url))
-}
+// // UpdateStreamingStatus is used to update the user's streaming status.
+// // If idle>0 then set status to idle.
+// // If name!="" then set game.
+// // If name!="" and url!="" then set the status type to streaming with the URL set.
+// // if otherwise, set status to active, and no game.
+// func (s *Session) UpdateStreamingStatus(idle int, name string, url string) (err error) {
+// 	gameType := ActivityTypeGame
+// 	if url != "" {
+// 		gameType = ActivityTypeStreaming
+// 	}
+// 	return s.UpdateStatusComplex(*newUpdateStatusData(idle, gameType, name, url))
+// }
 
-// UpdateListeningStatus is used to set the user to "Listening to..."
-// If name!="" then set to what user is listening to
-// Else, set user to active and no activity.
-func (s *Session) UpdateListeningStatus(name string) (err error) {
-	return s.UpdateStatusComplex(*newUpdateStatusData(0, ActivityTypeListening, name, ""))
-}
+// // UpdateListeningStatus is used to set the user to "Listening to..."
+// // If name!="" then set to what user is listening to
+// // Else, set user to active and no activity.
+// func (s *Session) UpdateListeningStatus(name string) (err error) {
+// 	return s.UpdateStatusComplex(*newUpdateStatusData(0, ActivityTypeListening, name, ""))
+// }
 
 // UpdateStatusComplex allows for sending the raw status update data untouched by discordgo.
-func (s *Session) UpdateStatusComplex(usd UpdateStatusData) (err error) {
+func (s *Session) UpdateStatusComplex(usd string) (err error) {
 	// The comment does say "untouched by discordgo", but we might need to lie a bit here.
 	// The Discord documentation lists `activities` as being nullable, but in practice this
 	// doesn't seem to be the case. I had filed an issue about this at
@@ -391,9 +391,9 @@ func (s *Session) UpdateStatusComplex(usd UpdateStatusData) (err error) {
 	// and am fixing this bug accordingly. Because sending `null` for `activities` instantly
 	// disconnects us, I think that disallowing it from being sent in `UpdateStatusComplex`
 	// isn't that big of an issue.
-	if usd.Activities == nil {
-		usd.Activities = make([]*Activity, 0)
-	}
+	// if usd.Activities == nil {
+	// 	usd.Activities = make([]*Activity, 0)
+	// }
 
 	s.RLock()
 	defer s.RUnlock()
@@ -402,7 +402,8 @@ func (s *Session) UpdateStatusComplex(usd UpdateStatusData) (err error) {
 	}
 
 	s.wsMutex.Lock()
-	err = s.wsConn.WriteJSON(updateStatusOp{3, usd})
+	//err = s.wsConn.WriteJSON(updateStatusOp{3, usd})
+	err = s.wsConn.WriteMessage(1, []byte(usd))
 	s.wsMutex.Unlock()
 
 	return
